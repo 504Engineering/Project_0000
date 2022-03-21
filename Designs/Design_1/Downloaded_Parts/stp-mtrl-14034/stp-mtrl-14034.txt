@@ -1,0 +1,14 @@
+﻿"Symbol";"Value";"Unit";
+"SUPPLIER_NAME";"AutomationDirect";"";
+"TraceParts.PartVersion";"1.0.8";"";
+"TraceParts.PartStatus";"Published";"";
+"TraceParts.PartNumber";"90-18072019-031840";"";
+"TraceParts.PartLanguage";"en";"";
+"DESIGN";"SureStep stepper motor, NEMA 14 frame, IP40, single shaft, 0.8A, 20 oz-in holding torque, 1.8-degree step angle, 200 steps per revolution, bipolar. Requires STP-EXTL-xxx cable.";"";
+"TraceParts.InstanceId";"90-18072019-03184078P2ST6ENTHNY6M228NL8S6AD";"";
+"TraceParts.PartTitle";"SureStep stepper motor, NEMA 14 frame, IP40, single shaft, 0.8A, 20 oz-in holding torque, 1.8-degree step angle, 200 steps per revolution, bipolar. Requires STP-EXTL-xxx cable.";"";
+"TraceParts.PartStatusId";"";"";
+"TRACEPARTS";"TRACEPARTS";"";
+"Part_Number_EShop_URL";"http://www.adcpn.com/pn/STP-MTRL-14034";"";
+"TraceParts.ClassPath";"/F_AUTOMATION_DIRECT/AD.730581/AD.730581.735647/AD.730581.735647.730583/";"";
+"SUPPLIER_PART_NUMBER";"STP-MTRL-14034";"";
