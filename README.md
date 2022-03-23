@@ -15,4 +15,11 @@ Project 0000
 - Timeline: 
     Since I am an active college student, this project will be a do-as-I-please project. Meaning there is no deadline.
 
+- Reasons for this project:
+    To prove the effectiveness of 504 Engineering to others.
+    This is the starting point for another project that will be created later
+    To show others the fun and creativity that can go into robotics
 
+- Progress:
+    - 3/21/2022: Started / Creation of project 0000
+    - 3/22/2022: Research into different gearing systems and manipulator designs from other companies. 
