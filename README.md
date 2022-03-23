@@ -23,3 +23,6 @@ Project 0000
 - Progress:
     - 3/21/2022: Started / Creation of project 0000
     - 3/22/2022: Research into different gearing systems and manipulator designs from other companies. 
+    - 3/23/2022: Gear ratio web based simulator found       http://www.thecatalystis.com/gears/
+                 Using a series of planetary gear speed reducers should work, however the speed reducing part is a problem.
+                 Using several 5-1 planetary gear boxes to increase torque.
