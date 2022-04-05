@@ -26,3 +26,7 @@ Project 0000
     - 3/23/2022: Gear ratio web based simulator found       http://www.thecatalystis.com/gears/
                  Using a series of planetary gear speed reducers should work, however the speed reducing part is a problem.
                  Using several 5-1 planetary gear boxes to increase torque.
+    - 4/4/2022: Designed the first prototype of the base tilting mechanism. 
+                Using 3 planetary gearboxes to increase torque. 
+                Using a bevel gear system to translate the axis of rotation by 90 degrees.
+                
