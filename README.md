@@ -29,4 +29,6 @@ Project 0000
     - 4/4/2022: Designed the first prototype of the base tilting mechanism. 
                 Using 3 planetary gearboxes to increase torque. 
                 Using a bevel gear system to translate the axis of rotation by 90 degrees.
-                
+    - Lost track of dates. Git commits list should have everything. 
+                Need to revisit the first prototype and made modifications to the mounting system arrangment. 
+    - 4/11/2022: Worked on code development, thinking of having a three phase control system that allows control over the internet.

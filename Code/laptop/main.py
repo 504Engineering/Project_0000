@@ -1,153 +1,429 @@
-# GUI library
-from ast import arguments
 import PySimpleGUI as sg
-import queue
-import threading
-
-# Input data library
-import pygame
-
-# Serial library
-import serial
-
-# Camera library
+import yaml
+import numpy as np
+import os, sys
 import cv2
 
-# Extra libraries
-import numpy as np
+class GUI:
+    def __init__(self):
+        sg.theme('DarkAmber')
 
-# server connection library
-import socket
-
-# data variables send and recieve
-s_data = [0, 0, 0, 0, 0, 0, 0]
-r_data = np.zeros(8)
-
-joy_a = np.zeros(4)
-joy_b = np.zeros(12)
-joy1_h = 0
-
-sg.theme('DarkGrey14')
-
-init_layout = [[    sg.Text('504 Engineering Control Apparatus')],
-               [    sg.Text('Click connect to control via joystick'), sg.Button('Connect')],
-               [    sg.Text('Click start to control manipulator via graphical interface'), sg.Button('Start')]]
-
-ccol1 = [
-    [sg.Frame('Stepper 1', [[sg.Text(key='-SS1-')]])],
-    [sg.Frame('Recieve Stepper 1', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS1-')]])]
+        # window dimensions
+        window_dimensions = (1280, 720)
+        self.start = 0
+        self.wl = \
+[   
+    [ 
+        sg.Column(
+        [
+            [ 
+                sg.Button('Start', key='-START-') 
+            ]  
+        ], expand_x=True, element_justification='left', vertical_alignment='center'),
+        sg.Column(
+        [  
+            [ 
+                sg.Text("504 Engineering Control Apparatus", font=('Helvetica', 11, 'bold'), auto_size_text=True, justification='right') 
+            ] 
+        ], expand_x=True, element_justification='right', vertical_alignment='center')  
+    ],
+    [
+        [
+            sg.Column (
+                [
+                    [
+                        sg.Text('Controllers Configuration', font=('Helvetica', 14, 'bold'))
+                    ],
+                    [
+                        sg.Text("   "),
+                        sg.Text("Button Mappings:", font=('Helvetica', 12))
+                    ],
+                    [
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Activate Stepper Group 1: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Activate Stepper Group 2: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Activate Stepper Group 3: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Reset Positioning: ', font=('Helvetica', 10))
+                                ]
+                            ]
+                        ),
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('0', key='-ASG1-')
+                                ],
+                                [
+                                    sg.Text('0', key='-ASG2-')
+                                ],
+                                [
+                                    sg.Text('0', key='-ASG3-')
+                                ],
+                                [
+                                    sg.Text('0', key='-RS1-')
+                                ],
+                            ], element_justification='left', vertical_alignment='center'
+                        )
+                    ]
+                ], element_justification='left', vertical_alignment='center', size=(280, 180)
+            ),
+            sg.Column (
+                [
+                    [
+                        sg.Text('   ', font=('Helvetica', 14, 'bold'))
+                    ],
+                    [
+                        sg.Text("   "),
+                        sg.Text("Inverted Controls:", font=('Helvetica', 12))
+                    ],
+                    [
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('X_Flip: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Y_Flip: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Z_Flip: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('S_Flip: ', font=('Helvetica', 10))
+                                ]
+                            ]
+                        ),
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('0', key='-ICV1-')
+                                ],
+                                [
+                                    sg.Text('0', key='-ICV2-')
+                                ],
+                                [
+                                    sg.Text('0', key='-ICV3-')
+                                ],
+                                [
+                                    sg.Text('0', key='-ICV4-')
+                                ],
+                            ], element_justification='left', vertical_alignment='center'
+                        )
+                    ]
+                ], element_justification='left', vertical_alignment='center', size=(280, 180)
+            ),
+            sg.Column (
+                [
+                    [
+                        sg.Image(filename='', key='webcam1')
+                    ]
+                ], element_justification='right', vertical_alignment='center', size=(640, 480)
+            )
+        ]
+    ],
+    [
+        [
+            sg.Column (
+                [
+                    [
+                        sg.Text('   '),
+                        sg.Text(' Axis Mappings:', font=('Helvetica', 12))
+                    ],
+                    [
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('JoyX: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('JoyY: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('JoyZ: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('JoyS: ', font=('Helvetica', 10))
+                                ]
+                            ]
+                        ),
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('0', key='-AMX-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AMY-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AMZ-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AMS-')
+                                ],
+                            ], element_justification='left', vertical_alignment='center'
+                        )
+                    ]
+                ], element_justification='left', vertical_alignment='center', size=(280, 180)
+            ),
+            sg.Column (
+                [
+                    [
+                        sg.Text('   '),
+                        sg.Text('DeadZones:', font=('Helvetica', 12))
+                    ],
+                    [
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('X_Deadzone: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Y_Deadzone: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Z_Deadzone: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('S_Deadzone: ', font=('Helvetica', 10))
+                                ]
+                            ]
+                        ),
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('0', key='-DZX-')
+                                ],
+                                [
+                                    sg.Text('0', key='-DZY-')
+                                ],
+                                [
+                                    sg.Text('0', key='-DZZ-')
+                                ],
+                                [
+                                    sg.Text('0', key='-DZS-')
+                                ],
+                            ], element_justification='left', vertical_alignment='center'
+                        )
+                    ]
+                ], element_justification='left', vertical_alignment='center', size=(280, 180)
+            )
+        ]
+    ],
+    [
+        [
+            sg.Column (
+                [
+                    [
+                        sg.Text('   '),
+                        sg.Text(' Autonomous Controls:', font=('Helvetica', 12))
+                    ],
+                    [
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Record: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Stop Recording: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Playback: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Save: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Autonomous Trigger 1:', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Autonomous Trigger 2:', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Autonomous Trigger 3:', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Autonomous Trigger 4:', font=('Helvetica', 10))
+                                ]
+                            ]
+                        ),
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('0', key='-AUR-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AUSR-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AUP-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AUS-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AU1-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AU2-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AU3-')
+                                ],
+                                [
+                                    sg.Text('0', key='-AU4-')
+                                ]
+                            ], element_justification='left', vertical_alignment='upper'
+                        )
+                    ]
+                ], element_justification='left', vertical_alignment='center', size=(280, 180)
+            ),
+            sg.Column (
+                [
+                    [
+                        sg.Text('   '),
+                        sg.Text('Camera Config:', font=('Helvetica', 12))
+                    ],
+                    [
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Camera Resolution: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Camera FPS: ', font=('Helvetica', 10))
+                                ],
+                                [
+                                    sg.Text('       '),
+                                    sg.Text('Number of Cameras: ', font=('Helvetica', 10))
+                                ]
+                            ]
+                        ),
+                        sg.Column (
+                            [
+                                [
+                                    sg.Text('0', key='-CSWH-')
+                                ],
+                                [
+                                    sg.Text('0', key='-CFPS-')
+                                ],
+                                [
+                                    sg.Text('0', key='-C#C-')
+                                ]
+                            ], element_justification='left', vertical_alignment='center'
+                        )
+                    ]
+                ], element_justification='left', vertical_alignment='center', size=(280, 180)
+            )
+        ]
+    ],
+    [
+        
+    ]
 ]
+        
+        self.window = sg.Window("Main", self.wl, size=window_dimensions)
 
-ccol2 = [
-    [sg.Frame('Stepper 2', [[sg.Text(key='-SS2-')]])],
-    [sg.Frame('Recieve Stepper 2', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS2-')]])]
-]
+    def controllers_config(self):
+        with open("config/controllers.yml", "r") as confile:
+            self.controllers_config_file = yaml.load(confile, Loader=yaml.SafeLoader)
 
-ccol3 = [
-    [sg.Frame('Stepper 3', [[sg.Text(key='-SS3-')]])],
-    [sg.Frame('Recieve Stepper 3', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS3-')]])]
-]
+        self.window['-ASG1-'].update(self.controllers_config_file['Button_Mappings'].get('Activate_Stepper_Group_1'))
+        self.window['-ASG2-'].update(self.controllers_config_file['Button_Mappings'].get('Activate_Stepper_Group_2'))
+        self.window['-ASG3-'].update(self.controllers_config_file['Button_Mappings'].get('Activate_Stepper_Group_3'))
+        self.window['-RS1-'].update(self.controllers_config_file['Button_Mappings'].get('Reset_Positioning'))
+        self.window['-AMX-'].update(self.controllers_config_file['Axis_Mappings'].get('JoyX'))
+        self.window['-AMY-'].update(self.controllers_config_file['Axis_Mappings'].get('JoyY'))
+        self.window['-AMZ-'].update(self.controllers_config_file['Axis_Mappings'].get('JoyZ'))
+        self.window['-AMS-'].update(self.controllers_config_file['Axis_Mappings'].get('JoyS'))
+        self.window['-ICV1-'].update(self.controllers_config_file['Inverted_Controls'].get('X_Flip'))
+        self.window['-ICV2-'].update(self.controllers_config_file['Inverted_Controls'].get('Y_Flip'))
+        self.window['-ICV3-'].update(self.controllers_config_file['Inverted_Controls'].get('Z_Flip'))
+        self.window['-ICV4-'].update(self.controllers_config_file['Inverted_Controls'].get('S_Flip'))
+        self.window['-DZX-'].update(self.controllers_config_file['DeadZones'].get('X_Deadzone'))
+        self.window['-DZY-'].update(self.controllers_config_file['DeadZones'].get('Y_Deadzone'))
+        self.window['-DZZ-'].update(self.controllers_config_file['DeadZones'].get('Z_Deadzone'))
+        self.window['-DZS-'].update(self.controllers_config_file['DeadZones'].get('S_Deadzone'))
+        self.window['-AUR-'].update(self.controllers_config_file['Autonomous_Controls'].get('Record'))
+        self.window['-AUSR-'].update(self.controllers_config_file['Autonomous_Controls'].get('Stop_Recording'))
+        self.window['-AUP-'].update(self.controllers_config_file['Autonomous_Controls'].get('Playback'))
+        self.window['-AUS-'].update(self.controllers_config_file['Autonomous_Controls'].get('Save'))
+        self.window['-AU1-'].update(self.controllers_config_file['Autonomous_Controls'].get('A1'))
+        self.window['-AU2-'].update(self.controllers_config_file['Autonomous_Controls'].get('A2'))
+        self.window['-AU3-'].update(self.controllers_config_file['Autonomous_Controls'].get('A3'))
+        self.window['-AU4-'].update(self.controllers_config_file['Autonomous_Controls'].get('A4'))
+        self.window['-CSWH-'].update(self.controllers_config_file['Camera_Config'].get('size'))
+        self.window['-CFPS-'].update(self.controllers_config_file['Camera_Config'].get('fps'))
+        self.window['-C#C-'].update(self.controllers_config_file['Camera_Config'].get('numofcams'))
+        
+    def autonomous_config(self):
+        with open("config/autonomous.yml", "r") as confile:
+            self.controllers_config_file = yaml.load(confile, Loader=yaml.SafeLoader)
+        
+        # for section in self.controllers_config_file:
+        #     print(type(section))
+        #     print(section)
+        #     print(type(self.controllers_config_file[section]))
+        #     print(self.controllers_config_file[section])
 
-ccol4 = [
-    [sg.Frame('Stepper 4', [[sg.Text(key='-SS4-')]])],
-    [sg.Frame('Recieve Stepper 4', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS4-')]])]
-]
+    def cam_read(self, cam):
+        try:
+            self.cap = cv2.VideoCapture(cam)
+            ret, frame = self.cap.read()
+            self.imgbytes = cv2.imencode('.png', frame)[1].tobytes()
+        except (RuntimeError, TypeError, NameError, cv2.error):
+            print("image failing to load")
+        self.window['webcam1'].update(data=self.imgbytes)
 
-ccol5 = [
-    [sg.Frame('Stepper 5', [[sg.Text(key='-SS5-')]])],
-    [sg.Frame('Recieve Stepper 5', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS5-')]])]
-]
+    def run(self):
+        event, values = self.window.read(timeout=100)
+        b = 0
+        if self.start == 1:
+            self.cam_read(0)
+        if event == sg.WIN_CLOSED or event == 'Close':
+            b = 1
+            self.cap.release
+        if event == '-START-':
+            self.controllers_config()
+            self.autonomous_config()
+            self.start = 1
+        return b
 
-ccol6 = [
-    [sg.Frame('Stepper 6', [[sg.Text(key='-SS6-')]])],
-    [sg.Frame('Recieve Stepper 6', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS6-')]])]
-]
-
-ccol7 = [
-    [sg.Frame('Stepper 7', [[sg.Text(key='-SS7-')]])],
-    [sg.Frame('Recieve Stepper 7', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS7-')]])]
-]
-
-ncol1 = [[sg.Frame('Stepper 1', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-S1-')]])],
-        [sg.Frame('Recieve Stepper 1', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS1-')]])]]
-
-ncol2 = [[sg.Frame('Stepper 2', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-S2-')]])],
-        [sg.Frame('Recieve Stepper 2', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS2-')]])]]
-
-ncol3 = [[sg.Frame('Stepper 3', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-S3-')]])],
-        [sg.Frame('Recieve Stepper 3', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS3-')]])]]
-
-ncol4 = [[sg.Frame('Stepper 4', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-S4-')]])],
-        [sg.Frame('Recieve Stepper 4', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS4-')]])]]
-
-ncol5 = [[sg.Frame('Stepper 5', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-S5-')]])],
-        [sg.Frame('Recieve Stepper 5', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS5-')]])]]
-
-ncol6 = [[sg.Frame('Stepper 6', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-S6-')]])],
-        [sg.Frame('Recieve Stepper 6', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS6-')]])]]
-
-ncol7 = [[sg.Frame('Stepper 7', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-S7-')]])],
-        [sg.Frame('Recieve Stepper 7', [[sg.Slider((-1.0, 1.0), default_value=0, resolution=0.1, orientation='vertical', key='-RS7-')]])]]
-
-conn_layout = [
-               [sg.Column(ccol1, element_justification='c' ), 
-                sg.Column(ccol2, element_justification='c'), 
-                sg.Column(ccol3, element_justification='c'), 
-                sg.Column(ccol4, element_justification='c'),
-                sg.Column(ccol5, element_justification='c'),
-                sg.Column(ccol6, element_justification='c'),
-                sg.Column(ccol7, element_justification='c')]
-               ]
-
-no_conn_layout = [
-               [sg.Column(ncol1, element_justification='c' ), 
-                sg.Column(ncol2, element_justification='c'), 
-                sg.Column(ncol3, element_justification='c'), 
-                sg.Column(ncol4, element_justification='c'),
-                sg.Column(ncol5, element_justification='c'),
-                sg.Column(ncol6, element_justification='c'),
-                sg.Column(ncol7, element_justification='c')]
-               ]
-               
-layout = [  [sg.Column(init_layout, key='-COL0-'), sg.Column(conn_layout, visible=False, key='-COL1-'), sg.Column(no_conn_layout, visible=False, key='-COL2-')] ]
-
-window = sg.Window('Control Apparatus', layout)
-
-layout = 0
-connect = 0
-
-qui_que = queue.Queue()
-
-pygame.init()
-pygame.joystick.init()
-
-def read_data():
-    joy_d = np.array(7)
-
-    joy = pygame.joystick.Joystick(0)
-    joy.init()
-
-    joy_a = [0, 1, 2, 3]
-    joy_b = []
-    return
+a = GUI()
 
 while True:
-    event, values = window.read(timeout=100)
-    # print(connect)
-    if event == sg.WIN_CLOSED:
+    c = a.run()
+    if c == 1:
         break
-    if event == 'Connect':
-        window[f'-COL{layout}-'].update(visible=False)
-        layout = 1
-        window[f'-COL{layout}-'].update(visible=True)
-        connect = 1
-    if event == 'Start':
-        window[f'-COL{layout}-'].update(visible=False)
-        layout = 2
-        window[f'-COL{layout}-'].update(visible=True)
-        connect = 0
-    if connect == 1:
-        
-        print(values['-S1-'], "    ", values['-RS1-'], "    ", s_data)
-        
-window.close()
